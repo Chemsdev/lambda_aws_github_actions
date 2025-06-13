@@ -1,3 +1,8 @@
+provider "aws" {
+  region = "eu-north-1"
+}
+
+
 resource "aws_lambda_function" "my_lambda" {
   function_name = "my-lambda-function"
   runtime       = "python3.9"
