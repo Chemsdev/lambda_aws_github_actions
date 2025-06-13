@@ -23,6 +23,11 @@ jobs:
         cp lambda_function/*.py package/
         cd package && zip -r ../function.zip .
 
+    - name: Check if AWS secrets exist
+      run: |
+        echo "✅ AWS_ACCESS_KEY_ID present: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
+        echo "✅ AWS_SECRET_ACCESS_KEY present: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v3
       with:

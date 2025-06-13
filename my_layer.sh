@@ -16,3 +16,5 @@ cd ..
 rm -rf python
 
 echo "✅ Layer prêt : terraform/layer.zip"
+
+# lancement : # lancement : chmod +x build-layer.sh
