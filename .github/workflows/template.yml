@@ -1,42 +1,63 @@
-name: Deploy Lambda to AWS
+name: Deploy Lambda Layer
 
+# 🔁 Déclenchement de l’action : à chaque push sur la branche main
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main  
 
 jobs:
-  deploy:
+  deploy-layer:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      # 1. Récupère le code du dépôt GitHub
+      - name: 📥 Checkout du repo
+        uses: actions/checkout@v3
 
-    - name: Install dependencies and package function
-      run: |
-        pip install -r lambda_function/requirements.txt -t package/
-        cp lambda_function/*.py package/
-        cd package && zip -r ../function.zip .
+      # 2. Configure l'environnement Python dans GitHub Actions
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - name: Check if AWS secrets exist
-      run: |
-        echo "✅ AWS_ACCESS_KEY_ID present: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
-        echo "✅ AWS_SECRET_ACCESS_KEY present: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+      # 3. Installe les dépendances dans le dossier layer/python
+      - name: 🧪 Installer les dépendances du layer
+        run: |
+          mkdir -p layer/python
+          pip install -r lambda_function/requirements.txt -t layer/python
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v3
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1
+      # 4. Crée l'archive ZIP du layer (format attendu par AWS)
+      - name: 🗜️ Créer le zip du layer
+        run: |
+          cd layer
+          zip -r ../my_layer_test.zip .
+          cd ..
 
-    - name: Deploy Lambda
-      run: |
-        aws lambda update-function-code \
-          --function-name my-lambda-function \
-          --zip-file fileb://function.zip
+      # 5. Configure les identifiants AWS à partir des secrets GitHub
+      - name: 🔐 Configurer AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id     : ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key : ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region            : eu-north-1  # 🔁 adapte selon ta région AWS
+
+      # 6. Publie le layer sur AWS Lambda et récupère son ARN
+      - name: 🚀 Publier le layer sur AWS Lambda
+        id: publish_layer
+        run: |
+          LAYER_ARN=$(aws lambda publish-layer-version \
+            --layer-name my-layer-test \
+            --description "Layer auto-uploaded by GitHub Actions" \
+            --zip-file fileb://my_layer_test.zip \
+            --compatible-runtimes python3.12 \
+            --query 'LayerVersionArn' --output text)
+          echo "LAYER_ARN=$LAYER_ARN" >> $GITHUB_ENV
+
+      # 🔗 7. Met à jour ta fonction Lambda en lui attachant le nouveau layer
+      - name: 🔗 Attacher le layer à la Lambda
+        run: |
+          aws lambda update-function-configuration \
+            --function-name NOM_DE_TA_LAMBDA \
+            --layers ${{ env.LAYER_ARN }}
