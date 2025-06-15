@@ -32,7 +32,7 @@ jobs:
       - name: 🗜️ Créer le zip du layer
         run: |
           cd layer
-          zip -r ../my_layer_test.zip .
+          zip -r ../my_layer.zip .
           cd ..
 
       # 5. Configure les identifiants AWS à partir des secrets GitHub
@@ -50,7 +50,7 @@ jobs:
           LAYER_ARN=$(aws lambda publish-layer-version \
             --layer-name my-layer-test \
             --description "Layer auto-uploaded by GitHub Actions" \
-            --zip-file fileb://my_layer_test.zip \
+            --zip-file fileb://my_layer.zip \
             --compatible-runtimes python3.12 \
             --query 'LayerVersionArn' --output text)
           echo "LAYER_ARN=$LAYER_ARN" >> $GITHUB_ENV
@@ -59,5 +59,5 @@ jobs:
       - name: 🔗 Attacher le layer à la Lambda
         run: |
           aws lambda update-function-configuration \
-            --function-name NOM_DE_TA_LAMBDA \
+            --function-name lambda_with_actions \
             --layers ${{ env.LAYER_ARN }}

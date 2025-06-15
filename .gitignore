@@ -1,7 +1,8 @@
 .env
+
+
+# On ignore les fichiers terraform
 .terraform/
-
-
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
