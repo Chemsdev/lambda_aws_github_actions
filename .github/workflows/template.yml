@@ -12,38 +12,38 @@ jobs:
 
     steps:
 
-      # 1. Récupère le code du dépôt GitHub
+      # 1. Récupère=ation du code du dépôt GitHub.
       - name: 📥 Checkout du repo
         uses: actions/checkout@v3
 
-      # 2. Configure l'environnement Python dans GitHub Actions
+      # 2. Configuration de l'environnement Python dans GitHub Actions.
       - name: 🐍 Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
-      # 3. Installe les dépendances dans le dossier layer/python
+      # 3. Installation des dépendances dans le dossier layer/python.
       - name: 🧪 Installer les dépendances du layer
         run: |
           mkdir -p layer/python
           pip install -r lambda_function/requirements.txt -t layer/python
 
-      # 4. Crée l'archive ZIP du layer (format attendu par AWS)
+      # 4. Création de l'archive ZIP du layer (format attendu par AWS).
       - name: 🗜️ Créer le zip du layer
         run: |
           cd layer
           zip -r ../my_layer.zip .
           cd ..
 
-      # 5. Configure les identifiants AWS à partir des secrets GitHub
+      # 5. Configuration des identifiants AWS à partir des secrets GitHub.
       - name: 🔐 Configurer AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id     : ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key : ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region            : eu-north-1  # 🔁 adapte selon ta région AWS
+          aws-region            : eu-north-1  
 
-      # 6. Publie le layer sur AWS Lambda et récupère son ARN
+      # 6. Publication du layer sur AWS Lambda et récupèration de son ARN
       - name: 🚀 Publier le layer sur AWS Lambda
         id: publish_layer
         run: |
@@ -55,7 +55,7 @@ jobs:
             --query 'LayerVersionArn' --output text)
           echo "LAYER_ARN=$LAYER_ARN" >> $GITHUB_ENV
 
-      # 🔗 7. Met à jour ta fonction Lambda en lui attachant le nouveau layer
+      # 🔗 7. Mise à jour de la fonction Lambda en lui attachant le nouveau layer.
       - name: 🔗 Attacher le layer à la Lambda
         run: |
           aws lambda update-function-configuration \
